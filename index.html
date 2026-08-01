@@ -78,9 +78,26 @@ footer{
 </footer>
 
 <script>
+const APP_ID = "33ZvBZZimVIet6YleNCRi";
+
 function loginDeriv(){
-  alert("Deriv login will be connected after you create your Deriv App ID.");
+  const redirect = window.location.origin + window.location.pathname;
+  const url =
+    `https://oauth.deriv.com/oauth2/authorize?app_id=${APP_ID}&l=EN&redirect_uri=${encodeURIComponent(redirect)}`;
+
+  window.location.href = url;
 }
+
+window.onload = () => {
+  const hash = window.location.hash.substring(1);
+  const params = new URLSearchParams(hash);
+  const token = params.get("access_token");
+
+  if(token){
+    alert("Logged in successfully!");
+    localStorage.setItem("deriv_token", token);
+  }
+};
 </script>
 
 </body>
