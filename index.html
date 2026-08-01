@@ -81,10 +81,10 @@ footer{
 const APP_ID = "33ZvBZZimVIet6YleNCRi";
 
 function loginDeriv(){
-  const redirect = window.location.origin + window.location.pathname;
+  const redirect = "https://calistusw30-maker.github.io/kalitrader.com-/";
+
   const url =
-    `https://deriv.com/oauth2/authorize?app_id=${APP_ID}&l=EN
-    &redirect_uri=${encodeURIComponent(redirect)}`;
+    `https://oauth.deriv.com/oauth2/authorize?app_id=${APP_ID}&l=EN&redirect_uri=${encodeURIComponent(redirect)}`;
 
   window.location.href = url;
 }
