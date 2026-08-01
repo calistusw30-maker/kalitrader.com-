@@ -83,7 +83,8 @@ const APP_ID = "33ZvBZZimVIet6YleNCRi";
 function loginDeriv(){
   const redirect = window.location.origin + window.location.pathname;
   const url =
-    `https://deriv.com/oauth2/authorize?app_id=
+    `https://deriv.com/oauth2/authorize?app_id=${APP_ID}&l=EN
+    &redirect_uri=${encodeURIComponent(redirect)}`;
 
   window.location.href = url;
 }
