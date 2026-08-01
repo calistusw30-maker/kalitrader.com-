@@ -84,8 +84,9 @@ function loginDeriv() {
   const redirect = 'https://calistusw30-maker.github.io/kalitrader.com-/';
 
   const url =
-    'https://oauth.deriv.com/oauth2/authorize?app_id=33ZvBZZimVIet6YleNCRi&l=EN&redirect_uri=' +
-    encodeURIComponent(redirect);
+    'https://oauth.deriv.com/oauth2/authorize?app_id=' + APP_ID +
+    '&redirect_uri=' + encodeURIComponent(redirect) +
+    '&l=EN';
 
   window.location.href = url;
 }
