@@ -94,10 +94,20 @@ window.onload = () => {
   const token = params.get("access_token");
 
   if(token){
-    alert("Logged in successfully!");
     localStorage.setItem("deriv_token", token);
+
+    document.querySelector(".hero").innerHTML = `
+      <h1>Welcome to Kali Trader</h1>
+      <p>You are logged in with Deriv successfully.</p>
+      <button onclick="logoutDeriv()">Logout</button>
+    `;
   }
 };
+
+function logoutDeriv(){
+  localStorage.removeItem("deriv_token");
+  location.reload();
+}
 </script>
 
 </body>
