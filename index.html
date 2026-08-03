@@ -128,7 +128,8 @@ let fallCount = 0;
 let patternArr = [];
 
 function connectDeriv(){
-  const token = document.getElementById('token').value.trim();
+  const token = 
+  document.getElementById('token').value.trim();
 
   if(!token){
     alert('Please enter your Deriv API token');
@@ -140,8 +141,6 @@ function connectDeriv(){
   ws = new WebSocket('wss://ws.derivws.com/websockets/v3');
 
   ws.onopen = () => {
-    console.log('Socket opened');
-
     ws.send(JSON.stringify({
       authorize: token
     }));
