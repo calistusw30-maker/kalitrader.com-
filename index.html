@@ -68,80 +68,38 @@
 </div>
 
 <script>
-let ws = null;
+const ws = new WebSocket('wss://ws.derivws.com/websockets/v3?app_id=1089');
 
-document.getElementById('connectBtn').addEventListener('click', connectDeriv);
+ws.onopen = () => {
+  document.getElementById('status').innerText = 'Live feed connected';
 
-function connectDeriv() {
+  ws.send(JSON.stringify({
+    ticks: 'R_100',
+    subscribe: 1
+  }));
+};
 
-  const token = document.getElementById('token').value.trim();
+ws.onmessage = (e) => {
+  const data = JSON.parse(e.data);
 
-  if (!token) {
-    alert('Please paste your Deriv PAT token');
-    return;
+  if(data.msg_type === 'tick'){
+    const quote = data.tick.quote;
+
+    document.getElementById('price').innerText = quote;
+    document.getElementById('digit').innerText =
+      quote.toString().slice(-1);
   }
+};
 
-  document.getElementById('status').innerText = 'Connecting...';
+ws.onerror = () => {
+  document.getElementById('status').innerText = 'Connection error';
+};
 
-  try {
-
-    ws = new WebSocket('wss://ws.derivws.com/websockets/v3');
-
-    ws.onopen = function () {
-
-      ws.send(JSON.stringify({
-        authorize: token
-      }));
-    };
-
-    ws.onmessage = function (event) {
-
-      const data = JSON.parse(event.data);
-
-      if (data.error) {
-        document.getElementById('status').innerText =
-          '❌ ' + data.error.message;
-        return;
-      }
-
-      if (data.msg_type === 'authorize') {
-
-        document.getElementById('status').innerText =
-          '✅ Connected: ' + data.authorize.loginid;
-
-        ws.send(JSON.stringify({
-          ticks: 'R_100',
-          subscribe: 1
-        }));
-      }
-
-      if (data.msg_type === 'tick') {
-
-        const quote = data.tick.quote;
-
-        document.getElementById('price').innerText = quote;
-
-        const digit = quote.toString().slice(-1);
-
-        document.getElementById('digit').innerText = digit;
-      }
-    };
-
-    ws.onerror = function () {
-      document.getElementById('status').innerText = '❌ Connection error';
-    };
-
-    ws.onclose = function (e) {
-      document.getElementById('status').innerText =
-        'Disconnected (' + e.code + ')';
-    };
-
-  } catch (err) {
-
-    document.getElementById('status').innerText = '❌ ' + err.message;
-  }
-}
+ws.onclose = () => {
+  document.getElementById('status').innerText = 'Feed disconnected';
+};
 </script>
+
 
 </body>
 </html>
