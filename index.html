@@ -135,19 +135,21 @@ function connectDeriv(){
     return;
   }
 
-  // NEW Deriv API WebSocket
+  document.getElementById('status').innerText = 'Connecting...';
+
   ws = new WebSocket('wss://ws.derivws.com/websockets/v3');
 
   ws.onopen = () => {
-    document.getElementById('status').innerText = 'Connecting...';
+    console.log('Socket opened');
 
-    // Authorize using the new PAT token
     ws.send(JSON.stringify({
       authorize: token
     }));
   };
 
   ws.onmessage = (msg) => {
+    console.log(msg.data);
+
     const data = JSON.parse(msg.data);
 
     if(data.error){
@@ -156,59 +158,32 @@ function connectDeriv(){
       return;
     }
 
-    // Successful login
     if(data.msg_type === 'authorize'){
       document.getElementById('status').innerText =
         '✅ Connected: ' + data.authorize.loginid;
 
-      // Subscribe to live ticks
       ws.send(JSON.stringify({
         ticks: 'R_100',
         subscribe: 1
       }));
     }
 
-    // Live tick updates
     if(data.msg_type === 'tick'){
-      const quote = data.tick.quote;
-      document.getElementById('price').innerText = quote;
-
-      const quoteStr = quote.toString();
-      const digit = parseInt(quoteStr[quoteStr.length - 1]);
-
-      document.getElementById('digit').innerText = digit;
-
-      if(digit % 2 === 0){
-        evenCount++;
-        patternArr.push('E');
-      } else {
-        oddCount++;
-        patternArr.push('O');
-      }
-
-      if(patternArr.length > 20) patternArr.shift();
-
-      document.getElementById('evenCount').innerText = evenCount;
-      document.getElementById('oddCount').innerText = oddCount;
-      document.getElementById('pattern').innerText =
-        patternArr.join(' ');
-
-      if(lastPrice !== null){
-        if(quote > lastPrice) riseCount++;
-        if(quote < lastPrice) fallCount++;
-      }
-
-      document.getElementById('riseCount').innerText = riseCount;
-      document.getElementById('fallCount').innerText = fallCount;
-
-      lastPrice = quote;
+      document.getElementById('price').innerText = data.tick.quote;
     }
   };
 
-  ws.onclose = () => {
-    document.getElementById('status').innerText = 'Disconnected';
+  ws.onerror = (e) => {
+    console.log('Socket error', e);
+    document.getElementById('status').innerText = '❌ Connection error';
   };
-}
+
+  ws.onclose = (e) => {
+    console.log('Socket closed', e);
+    document.getElementById('status').innerText =
+      'Disconnected (' + e.code + ')';
+  };
+
 </script>
 
 </body>
