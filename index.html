@@ -75,7 +75,8 @@ ws.onopen = () => {
 
   ws.send(JSON.stringify({
     ticks: 'R_100',
-    subscribe: 1
+passthrough: { test: 1 },
+subscribe: 1
   }));
 };
 
