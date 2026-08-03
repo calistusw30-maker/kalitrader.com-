@@ -82,16 +82,14 @@ ws.onopen = () => {
 ws.onmessage = (e) => {
   const data = JSON.parse(e.data);
 
-  if (data.msg_type === 'tick') {
-    const quote = data.tick.quote;
+  if (data.tick) {
+  const quote = data.tick.quote;
 
-    // Show live price
-    document.getElementById('price').innerText = quote;
+  document.getElementById('price').innerText = quote;
 
-    // Show last digit
-    const digit = quote.toString().slice(-1);
-    document.getElementById('digit').innerText = digit;
-  }
+  const digit = quote.toString().slice(-1);
+  document.getElementById('digit').innerText = digit;
+}
 };
 
 ws.onerror = () => {
