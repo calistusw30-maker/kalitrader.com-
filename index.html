@@ -1,117 +1,229 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Kali Trader</title>
-<style>
-body{
-  margin:0;
-  font-family:Arial,sans-serif;
-  background:#0f172a;
-  color:white;
-  text-align:center;
-}
-header{
-  background:#111827;
-  padding:20px;
-  font-size:24px;
-  font-weight:bold;
-}
-.hero{
-  padding:60px 20px;
-}
-button{
-  background:#16a34a;
-  color:white;
-  border:none;
-  padding:15px 30px;
-  border-radius:12px;
-  font-size:18px;
-  cursor:pointer;
-}
-button:hover{
-  background:#15803d;
-}
-.card{
-  background:#1e293b;
-  margin:20px;
-  padding:20px;
-  border-radius:15px;
-}
-footer{
-  margin-top:40px;
-  padding:20px;
-  background:#111827;
-}
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Deriv Live Analysis</title>
+  <style>
+    body{
+      margin:0;
+      font-family:Arial,sans-serif;
+      background:#0f172a;
+      color:white;
+      text-align:center;
+    }
+    header{
+      background:#111827;
+      padding:15px;
+      font-size:24px;
+      font-weight:bold;
+      color:#22c55e;
+    }
+    .card{
+      background:#1e293b;
+      margin:15px;
+      padding:15px;
+      border-radius:12px;
+      box-shadow:0 0 10px rgba(0,0,0,.4);
+    }
+    input,button{
+      padding:12px;
+      margin:6px;
+      border:none;
+      border-radius:8px;
+      font-size:16px;
+    }
+    input{ width:70%; }
+    button{
+      background:#22c55e;
+      color:white;
+      cursor:pointer;
+    }
+    button:hover{ background:#16a34a; }
+    .price{
+      font-size:34px;
+      color:#38bdf8;
+      margin:10px 0;
+    }
+    .signal{
+      font-size:22px;
+      font-weight:bold;
+      margin-top:10px;
+    }
+    .buy{ color:#22c55e; }
+    .sell{ color:#ef4444; }
+    iframe{
+      width:100%;
+      height:420px;
+      border:none;
+      border-radius:10px;
+    }
+    .footer{
+      margin:20px;
+      color:#94a3b8;
+      font-size:14px;
+    }
+  </style>
 </head>
 <body>
 
-<header>Kali Trader</header>
+<header>📈 Deriv Live Analysis</header>
 
-<div class="hero">
-  <h1>Trade Smarter with Kali Trader</h1>
-  <p>Forex • Deriv • Signals • Analysis</p>
-  <button onclick="loginDeriv()">Login with Deriv</button>
+<div class="card">
+  <h3>🔐 Connect Deriv Account</h3>
+  <input type="password" id="token" placeholder="Enter Deriv API Token"/>
+  <br/>
+  <button onclick="connectDeriv()">Connect</button>
+  <p id="status">Not connected</p>
 </div>
 
 <div class="card">
-  <h2>Live Signals</h2>
-  <p>Coming soon</p>
+  <h3>📊 Live Tick Price</h3>
+  <div class="price" id="price">--</div>
+  <p>Last Digit: <span id="digit">--</span></p>
 </div>
 
 <div class="card">
-  <h2>Market Analysis</h2>
-  <p>Coming soon</p>
+  <h3>🔢 Odd / Even Analysis</h3>
+  <p>Even Count: <span id="evenCount">0</span></p>
+  <p>Odd Count: <span id="oddCount">0</span></p>
+  <p>Pattern: <span id="pattern">-</span></p>
 </div>
 
 <div class="card">
-  <h2>WhatsApp Support</h2>
-  <a href="https://wa.me/254700000000" style="color:#22c55e;font-size:18px;">
-    Chat on WhatsApp
+  <h3>📈 Rise / Fall Analysis</h3>
+  <p>Rise: <span id="riseCount">0</span></p>
+  <p>Fall: <span id="fallCount">0</span></p>
+</div>
+
+<div class="card">
+  <h3>⚡ Auto Signal (Every 10s)</h3>
+  <div class="signal" id="signal">Waiting for data...</div>
+  <p>Next Signal In: <span id="timer">10</span>s</p>
+</div>
+
+<div class="card">
+  <h3>📉 TradingView Chart</h3>
+  <iframe src="https://s.tradingview.com/widgetembed/?frameElementId=tradingview&symbol=FX:EURUSD&interval=1&hidesidetoolbar=1&theme=dark"></iframe>
+</div>
+
+<div class="card">
+  <h3>💬 Contact on WhatsApp</h3>
+  <a href="https://wa.me/254700000000" target="_blank">
+    <button>Chat on WhatsApp</button>
   </a>
 </div>
 
-<footer>
-  © 2026 Kali Trader
-</footer>
+<div class="footer">
+  © 2026 Deriv Live Analysis Tool
+</div>
 
 <script>
-const APP_ID = "33ZvBZZimVIet6YleNCRi";
+let ws;
+let lastPrice = null;
+let evenCount = 0;
+let oddCount = 0;
+let riseCount = 0;
+let fallCount = 0;
+let patternArr = [];
 
-function loginDeriv() {
-  const redirect = 'https://calistusw30-maker.github.io/kalitrader.com-/';
+function connectDeriv(){
+  const token = document.getElementById('token').value.trim();
+  if(!token){
+    alert('Please enter your Deriv API token');
+    return;
+  }
 
-  const url =
-    'https://oauth.deriv.com/oauth2/authorize?app_id=' + APP_ID +
-    '&redirect_uri=' + encodeURIComponent(redirect) +
-    '&l=EN';
+  ws = new WebSocket('wss://ws.derivws.com/websockets/v3?app_id=1089');
 
-  window.location.href = url;
+  ws.onopen = () => {
+    document.getElementById('status').innerText = 'Connecting...';
+    ws.send(JSON.stringify({ authorize: token }));
+  };
+
+  ws.onmessage = (msg) => {
+    const data = JSON.parse(msg.data);
+
+    if(data.error){
+      document.getElementById('status').innerText = '❌ ' + data.error.message;
+      return;
+    }
+
+    if(data.msg_type === 'authorize'){
+      document.getElementById('status').innerText =
+        '✅ Connected: ' + data.authorize.loginid;
+
+      ws.send(JSON.stringify({
+        ticks: 'R_100',
+        subscribe: 1
+      }));
+    }
+
+    if(data.msg_type === 'tick'){
+      const quote = data.tick.quote;
+      document.getElementById('price').innerText = quote;
+
+      const quoteStr = quote.toString();
+      const digit = parseInt(quoteStr[quoteStr.length - 1]);
+      document.getElementById('digit').innerText = digit;
+
+      if(digit % 2 === 0){
+        evenCount++;
+        patternArr.push('E');
+      } else {
+        oddCount++;
+        patternArr.push('O');
+      }
+
+      if(patternArr.length > 20) patternArr.shift();
+
+      document.getElementById('evenCount').innerText = evenCount;
+      document.getElementById('oddCount').innerText = oddCount;
+      document.getElementById('pattern').innerText = patternArr.join(' ');
+
+      if(lastPrice !== null){
+        if(quote > lastPrice) riseCount++;
+        if(quote < lastPrice) fallCount++;
+      }
+
+      document.getElementById('riseCount').innerText = riseCount;
+      document.getElementById('fallCount').innerText = fallCount;
+
+      lastPrice = quote;
+    }
+  };
+
+  ws.onclose = () => {
+    document.getElementById('status').innerText = 'Disconnected';
+  };
 }
 
-window.onload = () => {
-  const hash = window.location.hash.substring(1);
-  const params = new URLSearchParams(hash);
-  const token = params.get("access_token");
+// Auto signal every 10 seconds
+let count = 10;
 
-  if(token){
-    localStorage.setItem("deriv_token", token);
+setInterval(() => {
+  count--;
+  document.getElementById('timer').innerText = count;
 
-    document.querySelector(".hero").innerHTML = `
-      <h1>Welcome to Kali Trader</h1>
-      <p>You are logged in with Deriv successfully.</p>
-      <a href="https://deriv.com" target="_blank">
-  <button>Trade on Deriv</button>
-</a>
-    `;
+  if(count <= 0){
+    generateSignal();
+    count = 10;
   }
-};
+}, 1000);
 
-function logoutDeriv(){
-  localStorage.removeItem("deriv_token");
-  location.reload();
+function generateSignal(){
+  const signal = document.getElementById('signal');
+
+  if(riseCount > fallCount){
+    signal.innerHTML = '📈 BUY / RISE';
+    signal.className = 'signal buy';
+  } else if(fallCount > riseCount){
+    signal.innerHTML = '📉 SELL / FALL';
+    signal.className = 'signal sell';
+  } else {
+    signal.innerHTML = '⏳ WAIT';
+    signal.className = 'signal';
+  }
 }
 </script>
 
