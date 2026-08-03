@@ -129,42 +129,53 @@ let patternArr = [];
 
 function connectDeriv(){
   const token = document.getElementById('token').value.trim();
+
   if(!token){
     alert('Please enter your Deriv API token');
     return;
   }
 
-  ws = new WebSocket('wss://ws.derivws.com/websockets/v3?app_id=1089');
+  // NEW Deriv API WebSocket
+  ws = new WebSocket('wss://ws.derivws.com/websockets/v3');
 
   ws.onopen = () => {
     document.getElementById('status').innerText = 'Connecting...';
-    ws.send(JSON.stringify({ authorize: token }));
+
+    // Authorize using the new PAT token
+    ws.send(JSON.stringify({
+      authorize: token
+    }));
   };
 
   ws.onmessage = (msg) => {
     const data = JSON.parse(msg.data);
 
     if(data.error){
-      document.getElementById('status').innerText = '❌ ' + data.error.message;
+      document.getElementById('status').innerText =
+        '❌ ' + data.error.message;
       return;
     }
 
+    // Successful login
     if(data.msg_type === 'authorize'){
       document.getElementById('status').innerText =
         '✅ Connected: ' + data.authorize.loginid;
 
+      // Subscribe to live ticks
       ws.send(JSON.stringify({
         ticks: 'R_100',
         subscribe: 1
       }));
     }
 
+    // Live tick updates
     if(data.msg_type === 'tick'){
       const quote = data.tick.quote;
       document.getElementById('price').innerText = quote;
 
       const quoteStr = quote.toString();
       const digit = parseInt(quoteStr[quoteStr.length - 1]);
+
       document.getElementById('digit').innerText = digit;
 
       if(digit % 2 === 0){
@@ -179,7 +190,8 @@ function connectDeriv(){
 
       document.getElementById('evenCount').innerText = evenCount;
       document.getElementById('oddCount').innerText = oddCount;
-      document.getElementById('pattern').innerText = patternArr.join(' ');
+      document.getElementById('pattern').innerText =
+        patternArr.join(' ');
 
       if(lastPrice !== null){
         if(quote > lastPrice) riseCount++;
@@ -196,34 +208,6 @@ function connectDeriv(){
   ws.onclose = () => {
     document.getElementById('status').innerText = 'Disconnected';
   };
-}
-
-// Auto signal every 10 seconds
-let count = 10;
-
-setInterval(() => {
-  count--;
-  document.getElementById('timer').innerText = count;
-
-  if(count <= 0){
-    generateSignal();
-    count = 10;
-  }
-}, 1000);
-
-function generateSignal(){
-  const signal = document.getElementById('signal');
-
-  if(riseCount > fallCount){
-    signal.innerHTML = '📈 BUY / RISE';
-    signal.className = 'signal buy';
-  } else if(fallCount > riseCount){
-    signal.innerHTML = '📉 SELL / FALL';
-    signal.className = 'signal sell';
-  } else {
-    signal.innerHTML = '⏳ WAIT';
-    signal.className = 'signal';
-  }
 }
 </script>
 
